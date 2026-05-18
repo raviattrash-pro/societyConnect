@@ -1,0 +1,10 @@
+target/
+*.log
+.classpath
+.project
+.settings/
+.factorypath
+Dockerfile
+.dockerignore
+.git
+.gitignore
