@@ -55,26 +55,18 @@ The startup engine uses network clustering effects: residents can join group-ple
 ### Tablet Views
 SocietyConnect includes responsive styling that scales to medium-sized viewports, preserving card structures, search layouts, and stat cards.
 
-````carousel
-![Tablet Homepage Cards](frontend/public/images/tablet_homepage_cards_1779092965377.png)
-<!-- slide -->
-![Tablet Search Interface](frontend/public/images/tablet_search_1779093112550.png)
-<!-- slide -->
-![Tablet Growth Hub](frontend/public/images/tablet_marketplace_1779093062230.png)
-````
+| Tablet Homepage | Tablet Search | Tablet Growth Hub |
+| :---: | :---: | :---: |
+| ![Tablet Homepage Cards](frontend/public/images/tablet_homepage_cards_1779092965377.png) | ![Tablet Search Interface](frontend/public/images/tablet_search_1779093112550.png) | ![Tablet Growth Hub](frontend/public/images/tablet_marketplace_1779093062230.png) |
 
 ---
 
 ### Mobile Views
 The application is fully optimized for mobile devices, offering a progressive mobile app layout with bottom navigation tabs, card slides, and swipe gestures.
 
-````carousel
-![Mobile Hero](frontend/public/images/mobile_homepage_hero_1779093159857.png)
-<!-- slide -->
-![Mobile Search Directory](frontend/public/images/mobile_search_1779093259679.png)
-<!-- slide -->
-![Mobile Growth Hub](frontend/public/images/mobile_marketplace_1779093219763.png)
-````
+| Mobile Homepage | Mobile Search Directory | Mobile Growth Hub |
+| :---: | :---: | :---: |
+| ![Mobile Hero](frontend/public/images/mobile_homepage_hero_1779093159857.png) | ![Mobile Search Directory](frontend/public/images/mobile_search_1779093259679.png) | ![Mobile Growth Hub](frontend/public/images/mobile_marketplace_1779093219763.png) |
 
 ---
 
