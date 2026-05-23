@@ -237,14 +237,4 @@ npm install
 node index.js
 ```
 
----
 
-## 🎨 Asset Configuration & Screenshots Setup
-
-To update and copy the latest application screenshots and visual illustrations to the repository:
-
-1.  Execute the node copy script from the root directory:
-```bash
-node frontend/copy_images.cjs
-```
-2.  This copies PNG assets from the AI workspace logs folder directly into the client's public images directory (`frontend/public/images/`) so they render on GitHub.

@@ -35,36 +35,35 @@ graph TD
 The system consists of three distinct modules cooperating over standard network protocols:
 
 ```mermaid
-rect rgb(240, 244, 255)
-    subgraph Client Tier (Frontend & Agents)
-        BrowserClient["Single-Page Application\n(Vite + React / CSS)\n[PWA]"]
-        ClaudeDesktop["AI Desktop Agent\n(Claude Desktop App)"]
+flowchart TD
+    subgraph ClientTier ["Client Tier (Frontend & Agents)"]
+        BrowserClient["Single-Page Application<br/>(Vite + React / CSS)<br/>[PWA]"]
+        ClaudeDesktop["AI Desktop Agent<br/>(Claude Desktop App)"]
     end
-end
 
-rect rgb(236, 253, 245)
-    subgraph Service Tier (API & AI Bridge)
-        SpringServer["Spring Boot Backend API\n(REST Controllers & Security)"]
-        NodeMCP["MCP Node Server\n(Command Line API Bridge)"]
+    subgraph ServiceTier ["Service Tier (API & AI Bridge)"]
+        SpringServer["Spring Boot Backend API<br/>(REST Controllers & Security)"]
+        NodeMCP["MCP Node Server<br/>(Command Line API Bridge)"]
     end
-end
 
-rect rgb(243, 244, 246)
-    subgraph Storage Tier (Database)
-        TiDBInstance["TiDB Database\n(MySQL-Compatible Serverless DB)"]
+    subgraph StorageTier ["Storage Tier (Database)"]
+        TiDBInstance["TiDB Database<br/>(MySQL-Compatible Serverless DB)"]
     end
-end
 
-BrowserClient -->|HTTP / JSON + JWT| SpringServer
-ClaudeDesktop -->|JSON-RPC via Standard I/O| NodeMCP
-NodeMCP -->|HTTP / JSON| SpringServer
-SpringServer -->|JDBC / JPA| TiDBInstance
+    BrowserClient -->|HTTP / JSON + JWT| SpringServer
+    ClaudeDesktop -->|JSON-RPC via Standard I/O| NodeMCP
+    NodeMCP -->|HTTP / JSON| SpringServer
+    SpringServer -->|JDBC / JPA| TiDBInstance
 
-style BrowserClient fill:#3b82f6,stroke:#1d4ed8,color:#fff
-style ClaudeDesktop fill:#ea580c,stroke:#c2410c,color:#fff
-style SpringServer fill:#10b981,stroke:#047857,color:#fff
-style NodeMCP fill:#8b5cf6,stroke:#6d28d9,color:#fff
-style TiDBInstance fill:#6b7280,stroke:#374151,color:#fff
+    style ClientTier fill:#f0f4ff,stroke:#d0d7de,stroke-width:1px
+    style ServiceTier fill:#ecfdf5,stroke:#d0d7de,stroke-width:1px
+    style StorageTier fill:#f3f4f6,stroke:#d0d7de,stroke-width:1px
+
+    style BrowserClient fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style ClaudeDesktop fill:#ea580c,stroke:#c2410c,color:#fff
+    style SpringServer fill:#10b981,stroke:#047857,color:#fff
+    style NodeMCP fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style TiDBInstance fill:#6b7280,stroke:#374151,color:#fff
 ```
 
 ---
