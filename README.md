@@ -7,7 +7,7 @@
 [![Vercel Deployment](https://img.shields.io/badge/Frontend-Vercel-black?style=flat-for-the-badge&logo=vercel)](https://vercel.com)
 [![Render Deployment](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-for-the-badge&logo=render)](https://render.com)
 
-> **SocietyConnect** is a corporate-grade hyperlocal digital ecosystem that bridges the trust gap between residents, local service providers, and residential communities. Featuring automated trust-score directories, group buying economies, emergency response dispatchers, and integrated wellness productivity panels, it transforms residential spaces into connected networks.
+> **SocietyConnect** is a corporate-grade hyperlocal digital ecosystem that bridges the trust gap between residents, local service providers, and residential communities. Featuring automated trust-score directories, group buying economies, emergency response dispatchers, and secure dispute resolution flows, it transforms residential spaces into connected networks.
 
 ---
 
@@ -16,11 +16,11 @@
 ### 🏡 For Residents
 *   **Verified Marketplace**: Easily find trusted service providers sorted by security background.
 *   **Secure Transactions**: Raise disputes and upload transaction screenshots for escrow-like security.
-*   **Productivity & Wellness**: Track focus tasks, hydration, mood metrics, and budget planners natively.
+*   **Real-time Communication**: Chat directly with local providers for instant scheduling updates.
 
 ### 🛠️ For Service Providers
-*   **Reputation Engine**: Build verification stars based on ratings and completed jobs.
-*   **Client Communication**: SSE-powered instant messaging to receive dispatch alerts.
+*   **Reputation Engine**: Build verification stars based on ratings, certifications, and completed jobs.
+*   **Client Communication**: Server-Sent Events (SSE) based direct client messaging.
 *   **SaaS Dashboard**: Design package pricing and manage subscription tiers.
 
 ### 🏢 For Community Management (Admins)
@@ -31,50 +31,154 @@
 
 ## 📸 Key Features Visual Walkthrough
 
-Below are the primary user dashboards and screens showing the clean, fluid, responsive, and neumorphic layout.
+Below are the primary user dashboards and screens showing the clean, fluid, responsive, and neumorphic layout across different device form factors.
 
-### 1. Neumorphic Interactive Service Directory
+### Desktop Views
+
+#### 1. Neumorphic Interactive Service Directory
 The homepage presents residents with a harmonious, accessibility-compliant neumorphic dashboard to search categories, view active bookings, and review nearby recommendations.
 
 ![Directory Homepage](frontend/public/images/desktop_homepage_cards_1779092595789.png)
 
-### 2. High-Intent Directory Search & Filtering
+#### 2. High-Intent Directory Search & Filtering
 Our search engine lists verified service providers, filtering by RWA verification status, premium tier level, and ecological practices. All search results are sorted by our dynamic Trust Score.
 
 ![Interactive Search Interface](frontend/public/images/desktop_search_1779092789130.png)
 
-### 3. Hyperlocal Growth Hub & Group Deals
+#### 3. Hyperlocal Growth Hub & Group Deals
 The startup engine uses network clustering effects: residents can join group-pledges for discounted society-wide deals, while service providers can access the emergency dispatch queue.
 
 ![Marketplace Growth Hub](frontend/public/images/desktop_marketplace_1779092625410.png)
 
-### 4. Focus Timer & Wellness Center (Aether Planner)
-An integrated daily planner providing a Pomodoro focus timer, timeline schedule, habits tracking grid, hydration manager, and daily budgeting logs.
+---
 
-### 5. Real-Time Chat & Communications
-A messaging page powered by Server-Sent Events (SSE) that connects residents with service providers to establish job instructions and confirm ETAs.
+### Tablet Views
+SocietyConnect includes responsive styling that scales to medium-sized viewports, preserving card structures, search layouts, and stat cards.
+
+````carousel
+![Tablet Homepage Cards](frontend/public/images/tablet_homepage_cards_1779092965377.png)
+<!-- slide -->
+![Tablet Search Interface](frontend/public/images/tablet_search_1779093112550.png)
+<!-- slide -->
+![Tablet Growth Hub](frontend/public/images/tablet_marketplace_1779093062230.png)
+````
+
+---
+
+### Mobile Views
+The application is fully optimized for mobile devices, offering a progressive mobile app layout with bottom navigation tabs, card slides, and swipe gestures.
+
+````carousel
+![Mobile Hero](frontend/public/images/mobile_homepage_hero_1779093159857.png)
+<!-- slide -->
+![Mobile Search Directory](frontend/public/images/mobile_search_1779093259679.png)
+<!-- slide -->
+![Mobile Growth Hub](frontend/public/images/mobile_marketplace_1779093219763.png)
+````
 
 ---
 
 ## 🏗️ Architectural Overview & Design Blueprints
 
-SocietyConnect implements a decoupled three-tier model optimized for cloud-native deployment.
+### End-to-End Workflow Diagram
+The following workflow details how a resident interacts with the platform to find a provider, dispatch an order, receive status updates, and finalize payment:
 
 ```mermaid
-graph LR
-    User([Web Client / MCP]) -->|HTTP / REST + JWT| SpringBoot[Spring Boot Backend]
-    SpringBoot -->|JPA / JDBC| TiDB[(TiDB MySQL)]
-    SpringBoot -->|Mail Alerts| JavaMail[Java Mail Sender]
+sequenceDiagram
+    autonumber
+    actor Resident as Resident (Web Client)
+    actor Provider as Provider (Web Client)
+    participant Front as React Frontend
+    participant Gateway as Spring Security Gateway
+    participant Backend as Spring Boot API Server
+    participant DB as TiDB Database
     
-    style User fill:#2563EB,stroke:#1E3A8A,stroke-width:2px,color:#fff
-    style SpringBoot fill:#059669,stroke:#065F46,stroke-width:2px,color:#fff
-    style TiDB fill:#4B5563,stroke:#1F2937,stroke-width:2px,color:#fff
+    Resident->>Front: Searches plumbing service & filters by trust
+    Front->>Gateway: GET /api/providers?category=Plumbing&sortBy=trust (with JWT)
+    Gateway->>Backend: Forward request
+    Backend->>DB: Query providers matching category
+    DB-->>Backend: Return provider list with verification attributes
+    Backend->>Backend: Calculate Trust Scores dynamically
+    Backend-->>Front: Return provider details + trust scores
+    Front-->>Resident: Displays ranked list with Trust ratings
+    
+    Resident->>Front: Clicks "Book Now" & enters description
+    Front->>Gateway: POST /api/bookings (booking details)
+    Gateway->>Backend: Forward request
+    Backend->>DB: Save booking (Status: PENDING)
+    DB-->>Backend: Confirm booking saved
+    Backend-->>Front: Return Booking Response
+    Front-->>Resident: Displays booking submitted status
+    
+    Backend->>Provider: Server-Sent Event (New booking alert!)
+    Provider->>Front: Accept booking & set ETA
+    Front->>Gateway: PATCH /api/bookings/{id}/status (status=ACCEPTED, eta=30)
+    Gateway->>Backend: Forward status update
+    Backend->>DB: Update booking row status and ETA
+    DB-->>Backend: Database updated
+    Backend->>Resident: Server-Sent Event (Provider En Route, ETA: 30m)
+    
+    Provider->>Front: Mark Completed
+    Front->>Gateway: PATCH /api/bookings/{id}/status (status=COMPLETED)
+    Gateway->>Backend: Update database
+    
+    Resident->>Front: Uploads payment screenshot & inputs Transaction ID
+    Front->>Gateway: PATCH /api/bookings/{id}/payment (transactionId, screenshotUrl)
+    Gateway->>Backend: Forward payment details
+    Backend->>DB: Set payment_status = PAID, save screenshot details
+    DB-->>Backend: Confirmed
+    Backend-->>Front: 200 OK
+    Front-->>Resident: Transaction marked complete!
 ```
 
-For comprehensive specifications, diagrams, and logic matrices, refer to our detailed blueprints:
+---
 
-*   📘 **[High-Level Design (HLD) Document](docs/HLD.md)**: Exposes full system context diagrams, container mappings, JWT security filter sequences, and tech stack choices.
-*   📗 **[Low-Level Design (LLD) Document](docs/LLD.md)**: Exposes the complete MySQL/TiDB Entity-Relationship (ER) diagram, the REST API endpoints listing, and the dynamic Trust Score formula logic.
+## 🛠️ Software Design Patterns Used
+
+To ensure robust scalability and loose coupling, the platform employs industry-standard architectural design patterns:
+
+### Backend Architecture Patterns
+*   **Controller-Service-Repository**: Separates controllers (HTTP mapping), services (business computations like Trust Scores and mail dispatch), and repositories (database queries).
+*   **Dependency Injection (IoC)**: Decouples component lifetimes, managed by Spring container beans.
+*   **Data Transfer Object (DTO)**: Encapsulates incoming and outgoing JSON payloads, hiding internal database structure.
+*   **Chain of Responsibility**: Processes request security checks and JWT token decoding sequentially.
+
+### Frontend Architecture Patterns
+*   **Provider Pattern (Context API)**: Propagates authentication tokens, theme values, and translation tables to deep subcomponents without prop-drilling.
+*   **Container-Presenter Pattern**: Decouples UI templates (cards, tables) from API hooks and routing context managers.
+
+For full architectural blueprints, see:
+*   📘 **[High-Level Design (HLD) Document](docs/HLD.md)**: Exposes container layouts, system contexts, security workflows, and full patterns analysis.
+*   📗 **[Low-Level Design (LLD) Document](docs/LLD.md)**: Exposes the database schema, dynamic trust score calculations, API tables, and class blueprints.
+
+---
+
+## 💾 Database Schema Overview
+
+The database uses a serverless **TiDB Cloud** setup with the following relationships:
+
+```mermaid
+erDiagram
+    USERS ||--|| RESIDENT_PROFILES : "has profile"
+    USERS ||--|| PROVIDER_PROFILES : "has profile"
+    USERS ||--o{ MESSAGES : "sends/receives"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    
+    CATEGORIES ||--o{ PROVIDER_PROFILES : "groups"
+    CATEGORIES ||--o{ SERVICES : "defines"
+    
+    PROVIDER_PROFILES ||--o{ SERVICES : "offers"
+    PROVIDER_PROFILES ||--o{ BOOKINGS : "receives"
+    PROVIDER_PROFILES ||--o{ REVIEWS : "gets reviewed"
+    PROVIDER_PROFILES ||--o{ FAVORITES : "favorited by"
+    
+    RESIDENT_PROFILES ||--o{ BOOKINGS : "creates"
+    RESIDENT_PROFILES ||--o{ FAVORITES : "favorites"
+    
+    BOOKINGS ||--|| REVIEWS : "generates"
+```
+
+For table-by-table column configurations, constraints, data types, and indexes, refer to the **[Database Schemas Section of the LLD](docs/LLD.md#1-database-schema--relationships-er-diagram)**.
 
 ---
 
@@ -120,9 +224,6 @@ spring:
 cd backend
 mvn spring-boot:run
 ```
-> [!TIP]
-> The database seeder will auto-create default categories, fake service listings, and an Admin account.
-> **Admin Credentials**: Email: `admin@societyconnect.com` | Password: `admin123`
 
 ### Step 4: Run the React Frontend
 1.  Open a new terminal window in the project root.
@@ -152,6 +253,6 @@ To update and copy the latest application screenshots and visual illustrations t
 
 1.  Execute the node copy script from the root directory:
 ```bash
-node frontend/copy_images.js
+node frontend/copy_images.cjs
 ```
 2.  This copies PNG assets from the AI workspace logs folder directly into the client's public images directory (`frontend/public/images/`) so they render on GitHub.

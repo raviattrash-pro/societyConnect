@@ -27,98 +27,116 @@ erDiagram
     BOOKINGS ||--o{ JOB_REQUESTS : "leads to"
 
     USERS {
-        Long id PK
-        String email UK
-        String password
-        Boolean enabled
-        String role "ROLE_RESIDENT, ROLE_PROVIDER, ROLE_ADMIN"
+        Long id PK "AUTO_INCREMENT"
+        String email UK "VARCHAR(191) NOT NULL"
+        String password "VARCHAR(255) NOT NULL"
+        Boolean enabled "TINYINT(1) DEFAULT 1"
+        String role "VARCHAR(50) NOT NULL"
     }
 
     RESIDENT_PROFILES {
-        Long id PK
-        Long user_id FK
-        String full_name
-        String address
-        String flat_number
-        String contact_number
+        Long id PK "AUTO_INCREMENT"
+        Long user_id FK "BIGINT NOT NULL"
+        String full_name "VARCHAR(255) NOT NULL"
+        String address "VARCHAR(255)"
+        String flat_number "VARCHAR(50)"
+        String contact_number "VARCHAR(50)"
     }
 
     PROVIDER_PROFILES {
-        Long id PK
-        Long user_id FK
-        Long category_id FK
-        String full_name
-        String phone
-        String bio
-        Double base_price
-        Integer experience_years
-        String availability "AVAILABLE, BUSY, OFFLINE"
-        Boolean is_verified "RWA Approved"
-        Boolean id_verified
-        Boolean police_verified
-        Boolean rwa_approved
-        String kyc_status
-        Boolean emergency_enabled
-        Boolean protection_eligible
-        String premium_tier "STANDARD, PRO, ELITE"
-        Integer response_time_minutes
-        Integer reliability_score
-        String service_packages
-        String portfolio_urls
-        String available_slots
-        String eco_practices
-        Boolean is_green
-        Double latitude
-        Double longitude
+        Long id PK "AUTO_INCREMENT"
+        Long user_id FK "BIGINT NOT NULL"
+        Long category_id FK "BIGINT"
+        String full_name "VARCHAR(255) NOT NULL"
+        String phone "VARCHAR(50)"
+        String bio "TEXT"
+        Double base_price "DOUBLE"
+        Integer experience_years "INT"
+        String availability "VARCHAR(50)"
+        Boolean is_verified "TINYINT(1) DEFAULT 0"
+        Boolean id_verified "TINYINT(1) DEFAULT 0"
+        Boolean police_verified "TINYINT(1) DEFAULT 0"
+        Boolean rwa_approved "TINYINT(1) DEFAULT 0"
+        String kyc_status "VARCHAR(50)"
+        Boolean emergency_enabled "TINYINT(1) DEFAULT 0"
+        Boolean protection_eligible "TINYINT(1) DEFAULT 0"
+        String premium_tier "VARCHAR(50)"
+        Integer response_time_minutes "INT"
+        Integer reliability_score "INT"
+        String service_packages "TEXT"
+        String portfolio_urls "TEXT"
+        String available_slots "TEXT"
+        String eco_practices "TEXT"
+        Boolean is_green "TINYINT(1) DEFAULT 0"
+        Double latitude "DOUBLE"
+        Double longitude "DOUBLE"
     }
 
     BOOKINGS {
-        Long id PK
-        Long resident_id FK
-        Long provider_id FK
-        Long category_id FK
-        String description
-        String status "PENDING, ACCEPTED, EN_ROUTE, IN_PROGRESS, COMPLETED, CANCELLED, DISPUTED"
-        String payment_status "PENDING, PAID, DISPUTED, REFUNDED"
-        String scheduled_at
-        String created_at
-        String eta_minutes
-        String dispute_reason
-        String dispute_resolution
-        String screenshot_url "Verification Upload"
-        String transaction_id
+        Long id PK "AUTO_INCREMENT"
+        Long resident_id FK "BIGINT NOT NULL"
+        Long provider_id FK "BIGINT NOT NULL"
+        Long category_id FK "BIGINT NOT NULL"
+        String description "TEXT"
+        String status "VARCHAR(50)"
+        String payment_status "VARCHAR(50)"
+        String scheduled_at "VARCHAR(100)"
+        String created_at "VARCHAR(100)"
+        String eta_minutes "VARCHAR(50)"
+        String dispute_reason "TEXT"
+        String dispute_resolution "TEXT"
+        String screenshot_url "VARCHAR(255)"
+        String transaction_id "VARCHAR(100)"
     }
 
     REVIEWS {
-        Long id PK
-        Long booking_id FK
-        Long resident_id FK
-        Integer rating "1-5 Stars"
-        String comment
-        DateTime created_at
+        Long id PK "AUTO_INCREMENT"
+        Long booking_id FK "BIGINT NOT NULL"
+        Long resident_id FK "BIGINT NOT NULL"
+        Integer rating "INT NOT NULL"
+        String comment "TEXT"
+        DateTime created_at "DATETIME"
     }
 
     MESSAGES {
-        Long id PK
-        Long sender_id FK
-        Long receiver_id FK
-        String content
-        DateTime created_at
-        Boolean is_read
+        Long id PK "AUTO_INCREMENT"
+        Long sender_id FK "BIGINT NOT NULL"
+        Long receiver_id FK "BIGINT NOT NULL"
+        String content "TEXT NOT NULL"
+        DateTime created_at "DATETIME"
+        Boolean is_read "TINYINT(1) DEFAULT 0"
     }
 
     GRIEVANCES {
-        Long id PK
-        String email
-        String description
-        String status "PENDING, RESOLVED"
-        DateTime created_at
+        Long id PK "AUTO_INCREMENT"
+        String email "VARCHAR(255) NOT NULL"
+        String description "TEXT NOT NULL"
+        String status "VARCHAR(50) DEFAULT 'PENDING'"
+        DateTime created_at "DATETIME"
     }
 ```
 
 ---
 
-## 2. Platform Core Algorithms
+## 2. Table Schemas, Constraints & Indexes
+
+To optimize lookup speeds for hyperlocal searches (which query lat/long, availability, and ratings), the following indexes are defined in **TiDB Cloud**:
+
+1.  **`users` Table**:
+    *   `email`: Unique Index (`UK_user_email`) for authentication lookups.
+2.  **`provider_profiles` Table**:
+    *   `user_id`: Foreign Key (`FK_provider_user`) with `ON DELETE CASCADE`.
+    *   Composite index on `(category_id, is_verified, availability)` to accelerate filters.
+    *   Composite spatial index on `(latitude, longitude)` for nearby service lookups.
+3.  **`bookings` Table**:
+    *   Index on `resident_id` & `provider_id` to query history.
+    *   Index on `status` and `payment_status` to compute statistics.
+4.  **`messages` Table**:
+    *   Composite index on `(sender_id, receiver_id, created_at)` to fetch conversation logs in chronological order.
+
+---
+
+## 3. Platform Core Algorithms
 
 ### The Trust Score Algorithm (`calculateTrustScore`)
 The ranking of service providers in search results is dictated by a dynamic **Trust Score (0-100)**. This prevents bad actors and boosts high-quality providers.
@@ -139,7 +157,40 @@ $$\text{Trust Score} = \text{Base (35)} + \text{Bonuses} \quad [\text{Capped at 
 
 ---
 
-## 3. Detailed REST API Documentation
+## 4. Class Components & Pattern Map
+
+The Spring Boot backend organizes components into a layered structure. A request flows through controllers to services and repositories:
+
+```mermaid
+graph TD
+    Controller[REST Controller e.g., BookingController] -->|Receives Request DTO| Service[Service Implementation e.g., BookingServiceImpl]
+    Service -->|Authenticates / Checks Roles| Security[Spring Security Context]
+    Service -->|Uses JPA Mapping| Repository[JPA Repository e.g., BookingRepository]
+    Repository -->|Queries / Persists Entity| Database[(TiDB Database)]
+    
+    style Controller fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style Service fill:#10b981,stroke:#047857,color:#fff
+    style Security fill:#ea580c,stroke:#c2410c,color:#fff
+    style Repository fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style Database fill:#6b7280,stroke:#374151,color:#fff
+```
+
+### Component Breakdown & Responsibilities:
+1.  **REST Controllers**:
+    *   Expose endpoints, read path variables, and enforce authorization annotations (`@PreAuthorize`).
+    *   Convert incoming payload into Request DTOs.
+2.  **DTOs (Data Transfer Objects)**:
+    *   `RegisterRequest` / `LoginRequest`: Inputs to validate request inputs using JSR-380 validation annotations (`@NotBlank`, `@Email`, `@Size`).
+    *   `ProviderDetailResponse`: Flat DTO mapping nested properties (Services, Reviews, Trust Scores) cleanly for frontend JSON ingestion.
+3.  **Service Implementations**:
+    *   Contain transactional business logic (`@Transactional`).
+    *   Calculate dynamic variables, update DB entities, compile summaries, and interact with the Java Mail Sender.
+4.  **JPA Repositories**:
+    *   Define query methods (e.g. `findByServiceProviderIdOrderByCreatedAtDesc`) mapped dynamically to database queries.
+
+---
+
+## 5. Detailed REST API Documentation
 
 All controllers are mapped under the `/api` route prefix. JWT token must be supplied as an `Authorization: Bearer <TOKEN>` header.
 
@@ -148,7 +199,7 @@ All controllers are mapped under the `/api` route prefix. JWT token must be supp
 *   `POST /login`: Authenticates user and returns JWT Token & profile metadata.
 *   `POST /forgot-password`: Generates reset token and triggers mail notification.
 *   `POST /reset-password`: Consumes reset token and commits new password.
-*   `POST /grievance`: Public endpoint allowing user complaints or password seed requests directly to system Admins.
+*   `POST /grievance`: Public endpoint allowing user complaints.
 
 ### Booking & Transaction Endpoints (`/api/bookings`)
 *   `POST /`: Creates a booking lead (Requires `ROLE_RESIDENT`).
@@ -180,7 +231,7 @@ All controllers are mapped under the `/api` route prefix. JWT token must be supp
 
 ---
 
-## 4. Frontend Component & Routing Map
+## 6. Frontend Component & Routing Map
 
 The frontend React application uses **React Router (v6)**. 
 
@@ -191,8 +242,7 @@ The frontend React application uses **React Router (v6)**.
 4.  `/provider/{id}`: Public provider profile detailing reviews timeline, available bookings calendar, and services.
 5.  `/messages`: SSE/WebSocket real-time chat dashboard showing active resident-provider chats.
 6.  `/growth-hub`: Platform business summary detailing verification moats, active group deals, and emergency contact list.
-7.  `/aether-planner`: Desktop productivity tool displaying Pomodoro timer, tasks timeline, and wellness tracking panels.
-8.  **Dashboards**:
+7.  **Dashboards**:
     *   `/resident-dashboard`: Track active jobs, dispute filings, payment receipts, and bookmark collections.
     *   `/provider-dashboard`: Subscription panels, bookings dispatcher, map updates, and package designer.
     *   `/admin-dashboard`: Dispute audits list, verification toggle queues, settings managers, and revenue dials.
