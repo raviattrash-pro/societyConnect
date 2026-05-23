@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const srcDir = 'C:\\Users\\ASUS\\.gemini\\antigravity\\brain\\eef62e9e-4782-415f-b90f-f30ee7150689';
+const srcDir = 'C:\\Users\\ASUS\\.gemini\\antigravity\\brain\\a9f3f3b0-dd84-4444-a2a1-21ffb6007e83';
 const destDir = path.join(__dirname, 'public', 'images');
 
 if (!fs.existsSync(destDir)) {
